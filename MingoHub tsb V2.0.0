@@ -1,9 +1,5 @@
 -- MingoHub v1.3.2
 -- Combat, utility, and visual enhancements for TSB.
--- Kittyware implementation migration: combat engine, autoblock, autotech,
--- autolethal, side dash assist, magnet, motion blur, sky/atmosphere,
--- self chams, effects color, no-X visuals, improved fling, rage toggles,
--- lock-on, tech helper, emote dash, m1 reset, improved ping/device spoof.
 
 local Players        = game:GetService("Players")
 local UIS            = game:GetService("UserInputService")
@@ -3623,6 +3619,27 @@ local function refreshGameplay()
     -- will be defined after all feature setups
 end
 
+local function normalizeRGB(value, fallback)
+    if type(value) ~= "table" then
+        return { fallback[1], fallback[2], fallback[3] }
+    end
+
+    local result = {}
+    for i = 1, 3 do
+        local component = tonumber(value[i])
+
+        -- Reject missing, NaN, and infinite components.
+        if not component or component ~= component
+            or component == math.huge or component == -math.huge then
+            return { fallback[1], fallback[2], fallback[3] }
+        end
+
+        result[i] = math.clamp(math.floor(component + 0.5), 0, 255)
+    end
+
+    return result
+end
+
 local function applyConfigTable(data)
     if type(data) ~= "table" then return false end
     if type(data.settings) == "table" then
@@ -3661,9 +3678,9 @@ local function applyConfigTable(data)
         if type(ap.Blur) == "boolean" then Appearance.Blur = ap.Blur end
         if type(ap.EdgeGlow) == "boolean" then Appearance.EdgeGlow = ap.EdgeGlow end
         if tonumber(ap.Scale) then Appearance.Scale = math.clamp(tonumber(ap.Scale), 0.75, 2) end
-        if type(ap.Accent) == "table" then Appearance.Accent = ap.Accent end
-        if type(ap.Button) == "table" then Appearance.Button = ap.Button end
-        if type(ap.Border) == "table" then Appearance.Border = ap.Border end
+        Appearance.Accent = normalizeRGB(ap.Accent, { 132, 145, 255 })
+        Appearance.Button = normalizeRGB(ap.Button, { 75, 91, 190 })
+        Appearance.Border = normalizeRGB(ap.Border, { 0, 0, 0 })
     end
     applyAppearance()
     syncControls()
